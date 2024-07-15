@@ -1,0 +1,37 @@
+replicaCount: 1
+
+service:
+  type: ClusterIP
+  port: 3030
+  targetPort: 3030
+
+gateway:
+  image: public.ecr.aws/r5p6q2u1/gateway-example
+  imageVersion: 0.0.1
+
+fe:
+  service:
+    type: ClusterIP
+    port: 3050
+    targetPort: 3050
+  image: public.ecr.aws/r5p6q2u1/js-example-spa
+  imageVersion: v0.0.2
+
+be:
+  service:
+    type: ClusterIP
+    port: 8000
+    targetPort: 8000
+  image: public.ecr.aws/r5p6q2u1/go-todo-be
+  imageVersion: 0.0.1
+
+db:
+  host: postgres-service
+  port: 5432
+  name: todo_db
+  user: todo_user
+  pass: todo_pass
+
+s3:
+  bucket: lops-go-todo-example-attachments
+  region: ap-south-1

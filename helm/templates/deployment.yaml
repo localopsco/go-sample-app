@@ -1,0 +1,189 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres-statefulset
+spec:
+  serviceName: "{{ .Values.db.host }}"
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres-template
+  template:
+    metadata:
+      labels:
+        app: postgres-template
+    spec:
+      containers:
+        - name: postgres-container
+          image: postgres:14.8-alpine3.18
+          env:
+            - name: POSTGRES_DB
+              value: "{{ .Values.db.name }}"
+            - name: POSTGRES_USER
+              value: "{{ .Values.db.user }}"
+            - name: POSTGRES_PASSWORD
+              value: "{{ .Values.db.pass }}"
+            - name: PGDATA
+              value: /var/lib/postgresql/data/todo/
+          ports:
+            - containerPort: {{ .Values.db.port }}
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql/data
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+  volumeClaimTemplates:
+    - metadata:
+        name: postgres-storage
+      spec:
+        accessModes: ["ReadWriteOnce"]
+        resources:
+          requests:
+            storage: 100Mi
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: be-deployment
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: be-template
+  template:
+    metadata:
+      labels:
+        app: be-template
+    spec:
+      containers:
+        - name: be-container
+          image: "{{ .Values.be.image }}:{{ .Values.be.imageVersion }}"
+          env:
+            - name: DB_HOST
+              value: "{{ .Values.db.host }}"
+            - name: DB_PORT
+              value: "{{ .Values.db.port }}"
+            - name: DB_NAME
+              value: "{{ .Values.db.name }}"
+            - name: DB_USER
+              value: "{{ .Values.db.user }}"
+            - name: DB_PASS
+              value: "{{ .Values.db.pass }}"
+            - name: AWS_ACCESS_KEY_ID
+              valueFrom:
+                secretKeyRef:
+                  name: cloud-provider-secret
+                  key: aws_access_key_id
+            - name: AWS_SECRET_ACCESS_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: cloud-provider-secret
+                  key: aws_secret_access_key
+            - name: S3_REGION
+              value: {{ .Values.s3.region }}
+            - name: S3_BUCKET_NAME
+              value: {{ .Values.s3.bucket }}
+
+          ports:
+            - name: be
+              containerPort: {{ .Values.be.service.port }}
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+      initContainers:
+      - name: check-db-ready
+        image: postgres:14.8-alpine3.18
+        env:
+            - name: POSTGRES_HOST
+              value: "{{ .Values.db.host }}"
+            - name: POSTGRES_PORT
+              value: "{{ .Values.db.port }}"
+        command: ['sh', '-c',
+          'echo Checking if postgres is up; until pg_isready -h $POSTGRES_HOST -p $POSTGRES_PORT;
+          do echo Waiting for postgres database to be up...; sleep 2; done; echo Postgres is up!']
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gateway-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gateway-template
+  template:
+    metadata:
+      labels:
+        app: gateway-template
+    spec:
+      containers:
+        - name: gateway-container
+          image: "{{ .Values.gateway.image }}:{{ .Values.gateway.imageVersion }}"
+          env:
+            - name: PORT
+              value: "{{ .Values.service.port }}"
+            - name: BE_HOST
+              value: "be-service"
+            - name: BE_PORT
+              value: "{{ .Values.be.service.port }}"
+            - name: FE_HOST
+              value: fe-service
+            - name: FE_PORT
+              value: "{{ .Values.fe.service.port }}"
+          ports:
+            - name: gateway
+              containerPort: {{ .Values.service.port }}
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "128Mi"
+              cpu: "500m"
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fe-deployment
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: fe-template
+  template:
+    metadata:
+      labels:
+        app: fe-template
+    spec:
+      containers:
+        - name: fe-container
+          image: "{{ .Values.fe.image }}:{{ .Values.fe.imageVersion }}"
+          env:
+            - name: PORT
+              value: "{{ .Values.fe.service.port }}"
+
+          ports:
+            - name: fe
+              containerPort: {{ .Values.fe.service.port }}
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
