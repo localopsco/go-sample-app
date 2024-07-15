@@ -5,7 +5,10 @@ import (
 	"errors"
 	"fmt"
 	"mime/multipart"
-	"path/filepath"
+	"os"
+	"strconv"
+	"strings"
+	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/aws/aws-sdk-go-v2/service/s3/types"
@@ -14,7 +17,6 @@ import (
 	"github.com/localopsco/go-sample/datastore"
 	"github.com/localopsco/go-sample/ent"
 	"github.com/localopsco/go-sample/models"
-	"github.com/spf13/viper"
 )
 
 const TaskNotFoundError = "Task not found"
@@ -85,8 +87,8 @@ func (svc *TaskService) AddAttachment(taskID uuid.UUID, file *multipart.FileHead
 		return nil, fmt.Errorf("Error reading attachment file: %w", err)
 	}
 	defer src.Close()
-	bucketName := viper.GetString("S3_BUCKET_NAME")
-	key := filepath.Base(file.Filename)
+	bucketName := os.Getenv("S3_BUCKET_NAME")
+	key := "attachment_" + strconv.FormatInt(time.Now().UnixNano(), 10)
 	_, err = svc.s3Client.PutObject(context.Background(), &s3.PutObjectInput{
 		Bucket:      aws.String(bucketName),
 		ContentType: aws.String(file.Header.Get("Content-Type")),
@@ -101,6 +103,33 @@ func (svc *TaskService) AddAttachment(taskID uuid.UUID, file *multipart.FileHead
 	updatedTask, err := svc.store.UpdateAttachmentURL(taskID, attachmentURL)
 	if err != nil {
 		return nil, fmt.Errorf("Error while updating task's attachment URL: %w", err)
+	}
+	return updatedTask, nil
+}
+
+func (svc *TaskService) DeleteAttachment(taskID uuid.UUID) (*models.Task, error) {
+	task, err := svc.store.GetTask(taskID)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, errors.New(TaskNotFoundError)
+		}
+		return nil, err
+	}
+	if task.AttachmentURL == "" {
+		return task, nil
+	}
+	key := task.AttachmentURL[strings.LastIndex(task.AttachmentURL, "/")+1:]
+	bucketName := os.Getenv("S3_BUCKET_NAME")
+	_, err = svc.s3Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
+		Key:    aws.String(key),
+		Bucket: aws.String(bucketName),
+	})
+	if err != nil {
+		return nil, fmt.Errorf("Error while deleting attachment: %w", err)
+	}
+	updatedTask, err := svc.store.UpdateAttachmentURL(taskID, "")
+	if err != nil {
+		return nil, fmt.Errorf("Error while clearing task's attachment URL: %w", err)
 	}
 	return updatedTask, nil
 }
