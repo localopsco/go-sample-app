@@ -72,9 +72,9 @@ spec:
               value: "{{ .Values.db.port }}"
             - name: DB_NAME
               value: "{{ .Values.db.name }}"
-            - name: DB_USER
+            - name: DB_USERNAME
               value: "{{ .Values.db.user }}"
-            - name: DB_PASS
+            - name: DB_PASSWORD
               value: "{{ .Values.db.pass }}"
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
