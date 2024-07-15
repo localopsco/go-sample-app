@@ -198,3 +198,31 @@ func (h *Handler) AddAttachment(c *gin.Context) {
 
 	c.JSON(http.StatusOK, task)
 }
+
+func (h *Handler) DeleteAttachment(c *gin.Context) {
+	taskIDStr := strings.TrimSpace(c.Param("task_id"))
+	taskID, err := uuid.Parse(taskIDStr)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Invalid task_id",
+		})
+		return
+	}
+
+	task, err := h.svc.DeleteAttachment(taskID)
+	if err != nil {
+		if err.Error() == service.TaskNotFoundError {
+			c.JSON(http.StatusNotFound, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
+		log.Printf("error getting task: %v", err)
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"message": "Unknown error. Something went wrong.",
+		})
+		return
+	}
+
+	c.JSON(http.StatusOK, task)
+}

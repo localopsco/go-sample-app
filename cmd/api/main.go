@@ -2,8 +2,8 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"log"
+	"os"
 
 	"github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
@@ -11,25 +11,15 @@ import (
 	"github.com/localopsco/go-sample/datastore"
 	"github.com/localopsco/go-sample/handler"
 	"github.com/localopsco/go-sample/service"
-	"github.com/spf13/viper"
 )
 
 func main() {
-	viper.SetConfigName("config")
-	viper.SetConfigType("json")
-	viper.AddConfigPath(".")
-	viper.AddConfigPath("$HOME")
-	err := viper.ReadInConfig()
-	if err != nil {
-		panic(fmt.Errorf("fatal error config file: %w", err))
-	}
-
 	entClient, err := datastore.NewEntClient(
-		viper.GetString("DB_HOST"),
-		viper.GetString("DB_PORT"),
-		viper.GetString("DB_USERNAME"),
-		viper.GetString("DB_PASSWORD"),
-		viper.GetString("DB_NAME"),
+		os.Getenv("DB_HOST"),
+		os.Getenv("DB_PORT"),
+		os.Getenv("DB_USERNAME"),
+		os.Getenv("DB_PASSWORD"),
+		os.Getenv("DB_NAME"),
 	)
 	if err != nil {
 		log.Fatalf("error connecting to database: %w", err)
@@ -38,7 +28,7 @@ func main() {
 
 	taskStore := datastore.NewTaskStore(entClient)
 
-	sdkConfig, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(viper.GetString("S3_BUCKET_REGION")))
+	sdkConfig, err := config.LoadDefaultConfig(context.Background(), config.WithRegion(os.Getenv("S3_BUCKET_REGION")))
 	if err != nil {
 		log.Fatalf("Couldn't load aws session. Please set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY environment variables")
 		return
@@ -58,6 +48,7 @@ func main() {
 	apiV1RouterGroup.PATCH("/tasks/:task_id", handler.UpdateTask)
 	apiV1RouterGroup.DELETE("/tasks/:task_id", handler.DeleteTask)
 	apiV1RouterGroup.POST("/tasks/:task_id/attach", handler.AddAttachment)
+	apiV1RouterGroup.DELETE("/tasks/:task_id/attach", handler.DeleteAttachment)
 
-	router.Run(":" + viper.GetString("APP_PORT"))
+	router.Run(":" + os.Getenv("APP_PORT"))
 }
