@@ -52,6 +52,10 @@ func (h *Handler) CreateTask(c *gin.Context) {
 	c.JSON(http.StatusOK, task)
 }
 
+func (h *Handler) GetMetaInfo(c *gin.Context) {
+	meta := h.svc.GetMetaInfo()
+	c.JSON(http.StatusOK, meta)
+}
 func (h *Handler) GetTask(c *gin.Context) {
 	taskIDStr := strings.TrimSpace(c.Param("task_id"))
 	taskID, err := uuid.Parse(taskIDStr)

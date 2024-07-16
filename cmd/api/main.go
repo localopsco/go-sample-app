@@ -39,16 +39,16 @@ func main() {
 	handler := handler.NewHandler(taskSvc)
 	router := gin.New()
 
-	router.GET("/health", handler.Health)
-
 	apiV1RouterGroup := router.Group("/api/v1/")
-	apiV1RouterGroup.POST("/tasks", handler.CreateTask)
-	apiV1RouterGroup.GET("/tasks", handler.ListTasks)
-	apiV1RouterGroup.GET("/tasks/:task_id", handler.GetTask)
-	apiV1RouterGroup.PATCH("/tasks/:task_id", handler.UpdateTask)
-	apiV1RouterGroup.DELETE("/tasks/:task_id", handler.DeleteTask)
-	apiV1RouterGroup.POST("/tasks/:task_id/attach", handler.AddAttachment)
-	apiV1RouterGroup.DELETE("/tasks/:task_id/attach", handler.DeleteAttachment)
+	apiV1RouterGroup.GET("/health/", handler.Health)
+	apiV1RouterGroup.POST("/tasks/", handler.CreateTask)
+	apiV1RouterGroup.GET("/tasks/", handler.ListTasks)
+	apiV1RouterGroup.GET("/meta/", handler.GetMetaInfo)
+	apiV1RouterGroup.GET("/tasks/:task_id/", handler.GetTask)
+	apiV1RouterGroup.PATCH("/tasks/:task_id/", handler.UpdateTask)
+	apiV1RouterGroup.DELETE("/tasks/:task_id/", handler.DeleteTask)
+	apiV1RouterGroup.POST("/tasks/:task_id/attach/", handler.AddAttachment)
+	apiV1RouterGroup.DELETE("/tasks/:task_id/attach/", handler.DeleteAttachment)
 
 	router.Run(":" + os.Getenv("APP_PORT"))
 }

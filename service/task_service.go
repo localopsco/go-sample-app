@@ -144,3 +144,12 @@ func (svc *TaskService) DeleteTask(taskID uuid.UUID) error {
 	}
 	return nil
 }
+
+func (svc *TaskService) GetMetaInfo() map[string]interface{} {
+	return map[string]interface{}{
+		"framework":          "Go",
+		"version":            os.Getenv("HELM_VERSION"),
+		"stack":              []string{"Go", "Postgres", "React.JS"},
+		"cloud-dependencies": []string{"AWS S3"},
+	}
+}

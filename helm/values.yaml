@@ -15,7 +15,7 @@ fe:
     port: 3050
     targetPort: 3050
   image: public.ecr.aws/r5p6q2u1/js-example-spa
-  imageVersion: v1.0.0
+  imageVersion: v1.0.2
 
 be:
   service:
@@ -33,5 +33,6 @@ db:
   pass: todo_pass
 
 s3:
+  enabled: true
   bucket: lops-go-todo-example-attachments
   region: ap-south-1

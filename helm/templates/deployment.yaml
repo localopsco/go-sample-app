@@ -76,6 +76,10 @@ spec:
               value: "{{ .Values.db.user }}"
             - name: DB_PASSWORD
               value: "{{ .Values.db.pass }}"
+            - name: HELM_VERSION
+              value: "{{ .Chart.Version }}"
+            - name: APP_PORT
+              value: "{{ .Values.be.service.port }}"
             - name: AWS_ACCESS_KEY_ID
               valueFrom:
                 secretKeyRef:
