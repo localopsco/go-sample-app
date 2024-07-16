@@ -78,13 +78,16 @@ func (store *TaskStore) UpdateAttachmentURL(taskID uuid.UUID, url string) (*mode
 	return convertEntTask(entTask), nil
 }
 
-func convertEntTask(task *ent.Task) *models.Task {
-	return &models.Task{
-		ID:            task.ID,
-		Title:         task.Title,
-		Description:   task.Description,
-		IsCompleted:   task.IsCompleted,
-		AttachmentURL: task.AttachmentURL,
-		CreatedAt:     task.CreatedAt,
+func convertEntTask(entTask *ent.Task) *models.Task {
+	task := &models.Task{
+		ID:          entTask.ID,
+		Title:       entTask.Title,
+		Description: entTask.Description,
+		IsCompleted: entTask.IsCompleted,
+		CreatedAt:   entTask.CreatedAt,
 	}
+	if entTask.AttachmentURL != "" {
+		task.AttachmentURL = &entTask.AttachmentURL
+	}
+	return task
 }

@@ -90,7 +90,7 @@ spec:
                 secretKeyRef:
                   name: cloud-provider-secret
                   key: aws_secret_access_key
-            - name: S3_REGION
+            - name: S3_BUCKET_REGION
               value: {{ .Values.s3.region }}
             - name: S3_BUCKET_NAME
               value: {{ .Values.s3.bucket }}

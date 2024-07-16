@@ -10,7 +10,7 @@ type Task struct {
 	ID            uuid.UUID `json:"id"`
 	Title         string    `json:"title"`
 	Description   string    `json:"description"`
-	IsCompleted   bool      `json:"bool"`
-	AttachmentURL string    `json:"attachement_url"`
+	IsCompleted   bool      `json:"is_completed"`
+	AttachmentURL *string   `json:"attachment_url"`
 	CreatedAt     time.Time `json:"created_at"`
 }

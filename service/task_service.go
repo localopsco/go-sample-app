@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/aws/aws-sdk-go-v2/service/s3"
-	"github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/aws/aws-sdk-go/aws"
 	"github.com/google/uuid"
 	"github.com/localopsco/go-sample/datastore"
@@ -94,7 +93,6 @@ func (svc *TaskService) AddAttachment(taskID uuid.UUID, file *multipart.FileHead
 		ContentType: aws.String(file.Header.Get("Content-Type")),
 		Body:        src,
 		Key:         aws.String(key),
-		ACL:         types.ObjectCannedACLPublicRead,
 	})
 	if err != nil {
 		return nil, fmt.Errorf("Error uploading attachment to s3: %w", err)
@@ -115,10 +113,11 @@ func (svc *TaskService) DeleteAttachment(taskID uuid.UUID) (*models.Task, error)
 		}
 		return nil, err
 	}
-	if task.AttachmentURL == "" {
+	if task.AttachmentURL == nil {
 		return task, nil
 	}
-	key := task.AttachmentURL[strings.LastIndex(task.AttachmentURL, "/")+1:]
+	key := *task.AttachmentURL
+	key = key[strings.LastIndex(key, "/")+1:]
 	bucketName := os.Getenv("S3_BUCKET_NAME")
 	_, err = svc.s3Client.DeleteObject(context.Background(), &s3.DeleteObjectInput{
 		Key:    aws.String(key),
@@ -147,9 +146,9 @@ func (svc *TaskService) DeleteTask(taskID uuid.UUID) error {
 
 func (svc *TaskService) GetMetaInfo() map[string]interface{} {
 	return map[string]interface{}{
-		"framework":          "Go",
+		"framework":          "go",
 		"version":            os.Getenv("HELM_VERSION"),
-		"stack":              []string{"Go", "Postgres", "React.JS"},
-		"cloud-dependencies": []string{"AWS S3"},
+		"stack":              "go, postgres, React.JS",
+		"cloud-dependencies": "AWS S3",
 	}
 }
