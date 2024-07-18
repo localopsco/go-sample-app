@@ -34,5 +34,5 @@ db:
 
 s3:
   enabled: true
-  bucket: lops-go-todo-example-attachments
-  region: ap-south-1
+  bucket_name: lops-go-todo-example-attachments
+  bucket_region: ap-south-1
