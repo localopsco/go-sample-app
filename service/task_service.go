@@ -153,13 +153,15 @@ func (svc *TaskService) DeleteTask(taskID uuid.UUID) error {
 
 func (svc *TaskService) GetMetaInfo() map[string]interface{} {
 	cloudDeps := ""
-	if s3Enabled, _ := strconv.ParseBool(os.Getenv("S3_ENABLED")); s3Enabled {
+	s3Enabled, _ := strconv.ParseBool(os.Getenv("S3_ENABLED"))
+	if s3Enabled {
 		cloudDeps = "AWS S3"
 	}
 	return map[string]interface{}{
-		"framework":          "go",
-		"version":            os.Getenv("HELM_VERSION"),
-		"stack":              "go, postgres, React.JS",
-		"cloud-dependencies": cloudDeps,
+		"framework":            "go",
+		"version":              os.Getenv("HELM_VERSION"),
+		"stack":                "go, postgres, React.JS",
+		"cloud-dependencies":   cloudDeps,
+		"attachment_supported": s3Enabled,
 	}
 }
