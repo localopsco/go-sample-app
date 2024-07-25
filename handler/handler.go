@@ -187,6 +187,12 @@ func (h *Handler) AddAttachment(c *gin.Context) {
 
 	task, err := h.svc.AddAttachment(taskID, file)
 	if err != nil {
+		if err.Error() == service.AttachmentsNotEnabledError {
+			c.JSON(http.StatusForbidden, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
 		if err.Error() == service.TaskNotFoundError {
 			c.JSON(http.StatusNotFound, gin.H{
 				"message": err.Error(),
@@ -215,6 +221,12 @@ func (h *Handler) DeleteAttachment(c *gin.Context) {
 
 	task, err := h.svc.DeleteAttachment(taskID)
 	if err != nil {
+		if err.Error() == service.AttachmentsNotEnabledError {
+			c.JSON(http.StatusForbidden, gin.H{
+				"message": err.Error(),
+			})
+			return
+		}
 		if err.Error() == service.TaskNotFoundError {
 			c.JSON(http.StatusNotFound, gin.H{
 				"message": err.Error(),

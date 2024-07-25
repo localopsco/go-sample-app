@@ -19,6 +19,7 @@ import (
 )
 
 const TaskNotFoundError = "Task not found"
+const AttachmentsNotEnabledError = "Attachments feature not enabled"
 
 type TaskService struct {
 	store    *datastore.TaskStore
@@ -74,6 +75,9 @@ func (svc *TaskService) GetTask(taskID uuid.UUID) (*models.Task, error) {
 }
 
 func (svc *TaskService) AddAttachment(taskID uuid.UUID, file *multipart.FileHeader) (*models.Task, error) {
+	if s3Enabled, _ := strconv.ParseBool(os.Getenv("S3_ENABLED")); !s3Enabled {
+		return nil, errors.New(AttachmentsNotEnabledError)
+	}
 	_, err := svc.store.GetTask(taskID)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -106,6 +110,9 @@ func (svc *TaskService) AddAttachment(taskID uuid.UUID, file *multipart.FileHead
 }
 
 func (svc *TaskService) DeleteAttachment(taskID uuid.UUID) (*models.Task, error) {
+	if s3Enabled, _ := strconv.ParseBool(os.Getenv("S3_ENABLED")); !s3Enabled {
+		return nil, errors.New(AttachmentsNotEnabledError)
+	}
 	task, err := svc.store.GetTask(taskID)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -145,10 +152,14 @@ func (svc *TaskService) DeleteTask(taskID uuid.UUID) error {
 }
 
 func (svc *TaskService) GetMetaInfo() map[string]interface{} {
+	cloudDeps := ""
+	if s3Enabled, _ := strconv.ParseBool(os.Getenv("S3_ENABLED")); s3Enabled {
+		cloudDeps = "AWS S3"
+	}
 	return map[string]interface{}{
 		"framework":          "go",
 		"version":            os.Getenv("HELM_VERSION"),
 		"stack":              "go, postgres, React.JS",
-		"cloud-dependencies": "AWS S3",
+		"cloud-dependencies": cloudDeps,
 	}
 }
