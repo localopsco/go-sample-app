@@ -23,7 +23,7 @@ be:
     port: 8000
     targetPort: 8000
   image: public.ecr.aws/r5p6q2u1/go-todo-be
-  imageVersion: 1.0.1
+  imageVersion: 1.0.2
 
 db:
   host: postgres-service
