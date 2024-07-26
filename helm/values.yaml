@@ -33,6 +33,6 @@ db:
   pass: todo_pass
 
 s3:
-  enabled: true
+  enabled: false
   bucket_name: lops-go-todo-example-attachments
   bucket_region: ap-south-1
